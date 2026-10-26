@@ -1,0 +1,36 @@
+[project]
+name = "unit3-estatehub-cloud"
+version = "3.0.0"
+description = "EstateHub Cloud API - Curso 1, Unidad 3 (JWT, anti-IDOR, fuerza bruta y Cloud Run)"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "fastapi>=0.143.0",
+    "uvicorn[standard]>=0.54.0",
+    "sqlmodel>=0.0.48",
+    "pydantic>=2.14.0",
+    "pydantic-settings>=2.15.0",
+    "pyjwt>=2.15.1",
+    "google-genai>=2.29.0",
+]
+
+[dependency-groups]
+dev = [
+    "httpx2>=2.14.0",
+    "pytest>=9.1.0",
+    "ruff>=0.17.0",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+
+[tool.ruff.lint.per-file-ignores]
+"app/ui.py" = ["E501"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

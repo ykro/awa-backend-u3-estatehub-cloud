@@ -1,0 +1,48 @@
+name: Despliegue a Cloud Run
+
+# Solo despliega desde main o a mano. Nunca desde pull requests.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-${{ github.repository }}
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    # Solo lo que debe estar en verde al terminar el taller guiado: el reto y tus tests
+    # propios pueden seguir en rojo sin impedir el despliegue guiado.
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.3.0
+        with:
+          version: "0.13.1" # la misma versión que el Dockerfile y el calificador
+          python-version: "3.13"
+      - run: uv sync --locked
+      - run: uv run ruff check .
+      - run: uv run ruff format --check .
+      - run: uv run pytest -q tests/test_demo.py tests/test_workshop.py
+
+  deploy:
+    needs: verify
+    # El despliegue lo hace el workflow reutilizable del curso (público, versión fijada con v1):
+    # construye la imagen, se autentica con Workload Identity Federation (sin llaves JSON), despliega
+    # por digest con los límites de costo del curso y comprueba que /health devuelva tu owner y este
+    # commit. En el proyecto del curso, Google solo entrega credenciales a ese workflow; por eso este
+    # archivo no se modifica (cambiarlo se reporta como sospecha de integridad).
+    uses: ykro/awa-workflows/.github/workflows/estatehub-cloudrun.yml@v1
+    permissions:
+      contents: read
+      id-token: write
+    with:
+      gcp_project_id: ${{ vars.GCP_PROJECT_ID }}
+      gcp_region: ${{ vars.GCP_REGION }}
+      gcp_wif_provider: ${{ vars.GCP_WIF_PROVIDER }}
+      gcp_ar_repo: ${{ vars.GCP_AR_REPO }}
